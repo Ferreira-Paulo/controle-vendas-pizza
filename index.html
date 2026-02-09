@@ -354,7 +354,7 @@
       sessionStorage.removeItem("club_pin");
     }
 
-    async function apiFetch(url, options = {}) {
+    async function apiFetch(url, options = {}, retried = false) {
       const pin = getPin();
       if (!pin) throw new Error("PIN não informado.");
 
@@ -368,12 +368,16 @@
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        if (res.status === 401) {
+        // Se PIN inválido, limpa e tenta 1 vez de novo (vai pedir PIN)
+        if (res.status === 401 && !retried) {
           clearPin();
-          alert("PIN inválido. Digite novamente.");
+          // forçar novo prompt
+          return apiFetch(url, options, true);
         }
-        throw new Error(data.error || "Erro na API");
+
+        throw new Error(data.error || `Erro na API (${res.status})`);
       }
+
       return data;
     }
 
@@ -735,16 +739,13 @@
       alert("PIN removido deste navegador. Ao usar qualquer ação, ele vai pedir novamente.");
     });
 
-    // =========================
-    // Init
-    // =========================
     (async function init() {
       try {
         vendas = await loadFromServer();
         render();
         setStatus("✅ Conectado.");
       } catch (err) {
-        setStatus("⚠️ Não foi possível conectar. Verifique a API na Vercel e o PIN.");
+        setStatus("⚠️ Falha ao conectar: " + (err?.message || err));
       }
     })();
   </script>
