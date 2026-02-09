@@ -246,7 +246,11 @@
               <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
-          </div>
+          </div>        
+
+          <button type="button" class="btnSecondary" id="btnConectar" style="width:auto; padding:8px 10px;">
+            Conectar (PIN)
+          </button>
 
           <div class="full">
             <div class="btnRow">
@@ -291,8 +295,9 @@
         <tbody id="tbody"></tbody>
       </table>
 
-      <div class="notice muted" id="statusMsg"></div>
-
+      <div class="notice muted" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div id="statusMsg"></div>
+      </div>
       <div class="footerNote">
         Multi-dispositivo: todos que tiverem o PIN acessam as vendas.
         Se o PIN vazar, troque o PIN na Vercel (Environment Variables) e clique em “Trocar PIN” aqui.
@@ -321,6 +326,7 @@
     const tbody = el("tbody");
     const contador = el("contador");
     const statusMsg = el("statusMsg");
+    const btnConectar = el("btnConectar");
 
     const btnCancelarEdicao = el("btnCancelarEdicao");
     const btnSalvar = el("btnSalvar");
@@ -341,12 +347,13 @@
       statusMsg.textContent = text || "";
     }
 
-    function getPin() {
-      let pin = sessionStorage.getItem("club_pin");
-      if (!pin) {
-        pin = prompt("Digite o PIN do Motoclube:");
-        if (pin) sessionStorage.setItem("club_pin", pin);
-      }
+    function getPinSilent() {
+      return sessionStorage.getItem("club_pin") || "";
+    }
+
+    function askPin() {
+      const pin = prompt("Digite o PIN do Motoclube:");
+      if (pin) sessionStorage.setItem("club_pin", pin);
       return pin || "";
     }
 
@@ -354,9 +361,9 @@
       sessionStorage.removeItem("club_pin");
     }
 
-    async function apiFetch(url, options = {}, retried = false) {
-      const pin = getPin();
-      if (!pin) throw new Error("PIN não informado.");
+    async function apiFetch(url, options = {}) {
+      const pin = getPinSilent(); // <-- não abre prompt aqui
+      if (!pin) throw new Error("PIN_REQUIRED");
 
       const headers = {
         "Content-Type": "application/json",
@@ -368,16 +375,12 @@
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        // Se PIN inválido, limpa e tenta 1 vez de novo (vai pedir PIN)
-        if (res.status === 401 && !retried) {
+        if (res.status === 401) {
           clearPin();
-          // forçar novo prompt
-          return apiFetch(url, options, true);
+          throw new Error("PIN_INVALID");
         }
-
         throw new Error(data.error || `Erro na API (${res.status})`);
       }
-
       return data;
     }
 
@@ -583,6 +586,7 @@
     });
 
     btnCancelarEdicao.addEventListener("click", () => resetForm());
+    btnConectar.addEventListener("click", connectAndLoad);
 
     pesquisa.addEventListener("input", render);
     filtroRetirada.addEventListener("change", render);
@@ -739,13 +743,48 @@
       alert("PIN removido deste navegador. Ao usar qualquer ação, ele vai pedir novamente.");
     });
 
-    (async function init() {
+    async function connectAndLoad() {
+      const pin = askPin(); // <-- agora é sempre por clique
+      if (!pin) {
+        setStatus("⚠️ PIN não informado.");
+        btnConectar.style.display = "inline-block";
+        return;
+      }
+
       try {
         vendas = await loadFromServer();
         render();
         setStatus("✅ Conectado.");
+        btnConectar.style.display = "none";
       } catch (err) {
-        setStatus("⚠️ Falha ao conectar: " + (err?.message || err));
+        if (err?.message === "PIN_INVALID") {
+          setStatus("❌ PIN inválido. Clique em Conectar e tente novamente.");
+        } else if (err?.message === "PIN_REQUIRED") {
+          setStatus("⚠️ Clique em Conectar (PIN).");
+        } else {
+          setStatus("⚠️ Falha ao conectar: " + (err?.message || err));
+        }
+        btnConectar.style.display = "inline-block";
+      }
+    }
+
+    (async function init() {
+      try {
+        // tenta carregar com o PIN se já estiver na sessão
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Conectado.");
+        btnConectar.style.display = "none";
+      } catch (err) {
+        // sem PIN ou PIN inválido -> mostra botão
+        if (err?.message === "PIN_REQUIRED") {
+          setStatus("🔒 Clique em Conectar (PIN) para carregar as vendas.");
+        } else if (err?.message === "PIN_INVALID") {
+          setStatus("❌ PIN inválido. Clique em Conectar (PIN) e tente novamente.");
+        } else {
+          setStatus("⚠️ Não foi possível conectar: " + (err?.message || err));
+        }
+        btnConectar.style.display = "inline-block";
       }
     })();
   </script>
