@@ -1,64 +1,220 @@
 <!doctype html>
 <html lang="pt-br">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Controle de Vendas — Pizza (Motoclube)</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-    body { margin: 0; background:#0b0f17; color:#e8eefc; }
-    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
-    header { display:flex; flex-wrap:wrap; gap:12px; align-items:end; justify-content:space-between; margin-bottom: 16px; }
-    h1 { margin:0; font-size: 22px; }
-    .sub { margin: 6px 0 0; opacity:.8; font-size: 13px; }
-    .card { background:#111827; border:1px solid #22304a; border-radius:14px; padding:16px; }
-    .grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; }
-    .grid .full { grid-column: 1 / -1; }
-    label { display:block; font-size:12px; opacity:.85; margin-bottom:6px; }
-    input, select, button, textarea {
-      width:100%; padding:10px 10px; border-radius:10px;
-      border:1px solid #2b3c5c; background:#0f172a; color:#e8eefc;
-      outline:none;
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
-    input::placeholder { color:#93a4c7; }
-    button { cursor:pointer; border:1px solid #385a99; background:#17305f; }
-    button:hover { filter: brightness(1.08); }
-    .btnRow { display:flex; gap:10px; flex-wrap:wrap; }
-    .btnSecondary { background:#0f172a; border-color:#2b3c5c; }
-    .btnDanger { background:#5f1d1d; border-color:#a33a3a; }
-    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #2b3c5c; background:#0f172a; }
-    .pill.ok { border-color:#2e7d32; }
-    .pill.no { border-color:#a33a3a; }
-    .topRow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:12px; }
-    .search { flex:1; min-width: 240px; }
-    table { width:100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { padding: 10px; border-bottom: 1px solid #22304a; text-align:left; font-size: 13px; vertical-align: top; }
-    th { font-size: 12px; opacity:.8; }
-    .actions { display:flex; gap:8px; flex-wrap:wrap; }
-    .actions button { width:auto; padding:8px 10px; border-radius:10px; }
-    .muted { opacity:.75; }
-    .footerNote { margin-top:10px; font-size:12px; opacity:.8; }
-    .notice { margin-top: 12px; font-size: 12px; opacity: .85; }
-    .notice strong { opacity: 1; }
+
+    body {
+      margin: 0;
+      background: #0b0f17;
+      color: #e8eefc;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: end;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .sub {
+      margin: 6px 0 0;
+      opacity: .8;
+      font-size: 13px;
+    }
+
+    .card {
+      background: #111827;
+      border: 1px solid #22304a;
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .grid .full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      opacity: .85;
+      margin-bottom: 6px;
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      width: 100%;
+      padding: 10px 10px;
+      border-radius: 10px;
+      border: 1px solid #2b3c5c;
+      background: #0f172a;
+      color: #e8eefc;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #93a4c7;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid #385a99;
+      background: #17305f;
+    }
+
+    button:hover {
+      filter: brightness(1.08);
+    }
+
+    .btnRow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btnSecondary {
+      background: #0f172a;
+      border-color: #2b3c5c;
+    }
+
+    .btnDanger {
+      background: #5f1d1d;
+      border-color: #a33a3a;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border: 1px solid #2b3c5c;
+      background: #0f172a;
+    }
+
+    .pill.ok {
+      border-color: #2e7d32;
+    }
+
+    .pill.no {
+      border-color: #a33a3a;
+    }
+
+    .topRow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 240px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border-bottom: 1px solid #22304a;
+      text-align: left;
+      font-size: 13px;
+      vertical-align: top;
+    }
+
+    th {
+      font-size: 12px;
+      opacity: .8;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      width: auto;
+      padding: 8px 10px;
+      border-radius: 10px;
+    }
+
+    .muted {
+      opacity: .75;
+    }
+
+    .footerNote {
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: .8;
+    }
+
+    .notice {
+      margin-top: 12px;
+      font-size: 12px;
+      opacity: .85;
+    }
+
+    .notice strong {
+      opacity: 1;
+    }
+
     @media (max-width: 900px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <header>
-      <div>
-        <h1>🍕 Controle de Vendas — Motoclube</h1>
-        <div class="sub">Dados salvos online (multi-dispositivo) com PIN único.</div>
-      </div>
-      <div class="btnRow">
-        <button class="btnSecondary" id="btnTrocarPin">Trocar PIN</button>
-        <button class="btnSecondary" id="btnExport">Exportar JSON</button>
-        <button class="btnSecondary" id="btnImport">Importar JSON</button>
-        <button class="btnDanger" id="btnLimparTudo">Limpar Tudo (Servidor)</button>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <img src="/img/logo-mc.png" alt="Logo do Motoclube"
+          style="width:52px; height:52px; border-radius:12px; object-fit:cover; border:1px solid #22304a;" />
+        <div>
+          <h1>Controle de Vendas — Motoclube</h1>
+          <div class="sub">Dados salvos online (multi-dispositivo) com PIN único.</div>
+        </div>
       </div>
     </header>
+
 
     <div class="card">
       <form id="formVenda">
@@ -98,7 +254,8 @@
           <div class="full">
             <div class="btnRow">
               <button type="submit" id="btnSalvar">Adicionar venda</button>
-              <button type="button" class="btnSecondary" id="btnCancelarEdicao" style="display:none;">Cancelar edição</button>
+              <button type="button" class="btnSecondary" id="btnCancelarEdicao" style="display:none;">Cancelar
+                edição</button>
             </div>
           </div>
         </div>
@@ -277,11 +434,11 @@
       if (!digits.startsWith("55")) digits = "55" + digits;
 
       const msg = `Oi, ${venda.comprador}! Aqui é do Motoclube 🙂\n` +
-                  `Só confirmando sua pizza:\n` +
-                  `• Sabor: ${venda.sabor}\n` +
-                  `• Vendedor: ${venda.vendedor}\n` +
-                  `Retirada: ${venda.retirou === "sim" ? "já retirada ✅" : "pendente ⏳"}\n\n` +
-                  `Qualquer coisa me chama por aqui.`;
+        `Só confirmando sua pizza:\n` +
+        `• Sabor: ${venda.sabor}\n` +
+        `• Vendedor: ${venda.vendedor}\n` +
+        `Retirada: ${venda.retirou === "sim" ? "já retirada ✅" : "pendente ⏳"}\n\n` +
+        `Qualquer coisa me chama por aqui.`;
 
       return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
     }
@@ -332,7 +489,7 @@
           const blob = [v.vendedor, v.comprador, v.sabor, v.telefone].map(normalize).join(" ");
           return blob.includes(q);
         })
-        .sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+        .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
     }
 
     function resetForm() {
@@ -495,7 +652,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `vendas_pizza_motoclube_${new Date().toISOString().slice(0,10)}.json`;
+        a.download = `vendas_pizza_motoclube_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         setStatus("✅ Exportado.");
@@ -595,4 +752,5 @@
     })();
   </script>
 </body>
+
 </html>
