@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Controle de Vendas — Pizza (Motoclube)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background:#0b0f17; color:#e8eefc; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    header { display:flex; flex-wrap:wrap; gap:12px; align-items:end; justify-content:space-between; margin-bottom: 16px; }
+    h1 { margin:0; font-size: 22px; }
+    .sub { margin: 6px 0 0; opacity:.8; font-size: 13px; }
+    .card { background:#111827; border:1px solid #22304a; border-radius:14px; padding:16px; }
+    .grid { display:grid; grid-template-columns: repeat(6, 1fr); gap:10px; }
+    .grid .full { grid-column: 1 / -1; }
+    label { display:block; font-size:12px; opacity:.85; margin-bottom:6px; }
+    input, select, button, textarea {
+      width:100%; padding:10px 10px; border-radius:10px;
+      border:1px solid #2b3c5c; background:#0f172a; color:#e8eefc;
+      outline:none;
+    }
+    input::placeholder { color:#93a4c7; }
+    button { cursor:pointer; border:1px solid #385a99; background:#17305f; }
+    button:hover { filter: brightness(1.08); }
+    .btnRow { display:flex; gap:10px; flex-wrap:wrap; }
+    .btnSecondary { background:#0f172a; border-color:#2b3c5c; }
+    .btnDanger { background:#5f1d1d; border-color:#a33a3a; }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #2b3c5c; background:#0f172a; }
+    .pill.ok { border-color:#2e7d32; }
+    .pill.no { border-color:#a33a3a; }
+    .topRow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; margin-top:12px; }
+    .search { flex:1; min-width: 240px; }
+    table { width:100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { padding: 10px; border-bottom: 1px solid #22304a; text-align:left; font-size: 13px; vertical-align: top; }
+    th { font-size: 12px; opacity:.8; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .actions button { width:auto; padding:8px 10px; border-radius:10px; }
+    .muted { opacity:.75; }
+    .footerNote { margin-top:10px; font-size:12px; opacity:.8; }
+    .notice { margin-top: 12px; font-size: 12px; opacity: .85; }
+    .notice strong { opacity: 1; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>🍕 Controle de Vendas — Motoclube</h1>
+        <div class="sub">Dados salvos online (multi-dispositivo) com PIN único.</div>
+      </div>
+      <div class="btnRow">
+        <button class="btnSecondary" id="btnTrocarPin">Trocar PIN</button>
+        <button class="btnSecondary" id="btnExport">Exportar JSON</button>
+        <button class="btnSecondary" id="btnImport">Importar JSON</button>
+        <button class="btnDanger" id="btnLimparTudo">Limpar Tudo (Servidor)</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <form id="formVenda">
+        <div class="grid">
+          <div>
+            <label>Vendedor</label>
+            <input id="vendedor" placeholder="Ex: Paulo" required />
+          </div>
+          <div>
+            <label>Comprador</label>
+            <input id="comprador" placeholder="Ex: João" required />
+          </div>
+          <div>
+            <label>Sabor</label>
+            <select id="sabor" required>
+              <option value="">Selecione...</option>
+              <option>Calabresa</option>
+              <option>Frango com Catupiry</option>
+              <option>Portuguesa</option>
+              <option>Marguerita</option>
+              <option>Quatro Queijos</option>
+              <option>Outro</option>
+            </select>
+          </div>
+          <div>
+            <label>Telefone (WhatsApp)</label>
+            <input id="telefone" placeholder="Ex: (12) 98888-7777" />
+          </div>
+          <div>
+            <label>Retirou?</label>
+            <select id="retirou" required>
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <div class="btnRow">
+              <button type="submit" id="btnSalvar">Adicionar venda</button>
+              <button type="button" class="btnSecondary" id="btnCancelarEdicao" style="display:none;">Cancelar edição</button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="topRow">
+        <div class="search">
+          <label>Pesquisar (vendedor, comprador, sabor ou telefone)</label>
+          <input id="pesquisa" placeholder="Digite para filtrar..." />
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:end;">
+          <div>
+            <label>Filtro</label>
+            <select id="filtroRetirada">
+              <option value="todas">Todas</option>
+              <option value="nao">Não retiradas</option>
+              <option value="sim">Retiradas</option>
+            </select>
+          </div>
+          <div class="pill" id="contador"></div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Data/Hora</th>
+            <th>Vendedor</th>
+            <th>Comprador</th>
+            <th>Sabor</th>
+            <th>Telefone</th>
+            <th>Retirou?</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div class="notice muted" id="statusMsg"></div>
+
+      <div class="footerNote">
+        Multi-dispositivo: todos que tiverem o PIN acessam as vendas.
+        Se o PIN vazar, troque o PIN na Vercel (Environment Variables) e clique em “Trocar PIN” aqui.
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept="application/json" style="display:none;" />
+
+  <script>
+    // =========================
+    // CONFIG
+    // =========================
+    const API = "/api/vendas"; // Vercel serverless function
+
+    const el = (id) => document.getElementById(id);
+
+    const form = el("formVenda");
+    const vendedor = el("vendedor");
+    const comprador = el("comprador");
+    const sabor = el("sabor");
+    const telefone = el("telefone");
+    const retirou = el("retirou");
+    const pesquisa = el("pesquisa");
+    const filtroRetirada = el("filtroRetirada");
+    const tbody = el("tbody");
+    const contador = el("contador");
+    const statusMsg = el("statusMsg");
+
+    const btnCancelarEdicao = el("btnCancelarEdicao");
+    const btnSalvar = el("btnSalvar");
+
+    const btnExport = el("btnExport");
+    const btnImport = el("btnImport");
+    const btnLimparTudo = el("btnLimparTudo");
+    const btnTrocarPin = el("btnTrocarPin");
+    const fileInput = el("fileInput");
+
+    let vendas = [];
+    let editId = null;
+
+    // =========================
+    // PIN + API
+    // =========================
+    function setStatus(text) {
+      statusMsg.textContent = text || "";
+    }
+
+    function getPin() {
+      let pin = sessionStorage.getItem("club_pin");
+      if (!pin) {
+        pin = prompt("Digite o PIN do Motoclube:");
+        if (pin) sessionStorage.setItem("club_pin", pin);
+      }
+      return pin || "";
+    }
+
+    function clearPin() {
+      sessionStorage.removeItem("club_pin");
+    }
+
+    async function apiFetch(url, options = {}) {
+      const pin = getPin();
+      if (!pin) throw new Error("PIN não informado.");
+
+      const headers = {
+        "Content-Type": "application/json",
+        "x-pin": pin,
+        ...(options.headers || {})
+      };
+
+      const res = await fetch(url, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          clearPin();
+          alert("PIN inválido. Digite novamente.");
+        }
+        throw new Error(data.error || "Erro na API");
+      }
+      return data;
+    }
+
+    async function loadFromServer() {
+      setStatus("Carregando vendas do servidor...");
+      const data = await apiFetch(API, { method: "GET" });
+      // createdAt pode vir como Timestamp (obj) dependendo do Firestore Admin,
+      // então normalizamos para string ISO quando possível.
+      return data.map(v => ({
+        ...v,
+        createdAt: normalizeCreatedAt(v.createdAt)
+      }));
+    }
+
+    async function createVenda(payload) {
+      setStatus("Salvando venda...");
+      await apiFetch(API, { method: "POST", body: JSON.stringify(payload) });
+    }
+
+    async function updateVenda(id, payload) {
+      setStatus("Atualizando venda...");
+      await apiFetch(`${API}?id=${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) });
+    }
+
+    async function deleteVenda(id) {
+      setStatus("Excluindo venda...");
+      await apiFetch(`${API}?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+    function normalize(str) {
+      return (str || "").toString().toLowerCase().trim();
+    }
+
+    function escapeHtml(str) {
+      return (str ?? "")
+        .toString()
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function onlyDigits(str) {
+      return (str || "").toString().replace(/\D/g, "");
+    }
+
+    function waLink(phone, venda) {
+      let digits = onlyDigits(phone);
+      if (!digits) return "#";
+      digits = digits.replace(/^0+/, "");
+      if (!digits.startsWith("55")) digits = "55" + digits;
+
+      const msg = `Oi, ${venda.comprador}! Aqui é do Motoclube 🙂\n` +
+                  `Só confirmando sua pizza:\n` +
+                  `• Sabor: ${venda.sabor}\n` +
+                  `• Vendedor: ${venda.vendedor}\n` +
+                  `Retirada: ${venda.retirou === "sim" ? "já retirada ✅" : "pendente ⏳"}\n\n` +
+                  `Qualquer coisa me chama por aqui.`;
+
+      return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+    }
+
+    function normalizeCreatedAt(createdAt) {
+      // Pode vir como string ISO, ou objeto Timestamp { _seconds, _nanoseconds } ou { seconds, nanoseconds }
+      if (!createdAt) return new Date().toISOString();
+
+      if (typeof createdAt === "string") return createdAt;
+
+      // Firestore Timestamp (Admin) pode serializar como objeto
+      const sec = createdAt._seconds ?? createdAt.seconds;
+      const ns = createdAt._nanoseconds ?? createdAt.nanoseconds ?? 0;
+      if (typeof sec === "number") {
+        const ms = sec * 1000 + Math.floor(ns / 1e6);
+        return new Date(ms).toISOString();
+      }
+
+      // fallback
+      return new Date().toISOString();
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return isNaN(d.getTime()) ? "-" : d.toLocaleString("pt-BR");
+    }
+
+    function updateCounter(list) {
+      const total = vendas.length;
+      const nao = vendas.filter(v => v.retirou === "nao").length;
+      const sim = vendas.filter(v => v.retirou === "sim").length;
+      contador.textContent = `Total: ${total} • Não retiradas: ${nao} • Retiradas: ${sim} • Mostrando: ${list.length}`;
+    }
+
+    function pillRetirada(val) {
+      if (val === "sim") return `<span class="pill ok">✅ Sim</span>`;
+      return `<span class="pill no">⏳ Não</span>`;
+    }
+
+    function getFiltered() {
+      const q = normalize(pesquisa.value);
+      const f = filtroRetirada.value;
+
+      return vendas
+        .filter(v => {
+          if (f !== "todas" && v.retirou !== f) return false;
+          if (!q) return true;
+          const blob = [v.vendedor, v.comprador, v.sabor, v.telefone].map(normalize).join(" ");
+          return blob.includes(q);
+        })
+        .sort((a,b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    }
+
+    function resetForm() {
+      form.reset();
+      retirou.value = "nao";
+      editId = null;
+      btnCancelarEdicao.style.display = "none";
+      btnSalvar.textContent = "Adicionar venda";
+    }
+
+    // =========================
+    // Render
+    // =========================
+    function render() {
+      const list = getFiltered();
+      updateCounter(list);
+
+      tbody.innerHTML = list.map(v => `
+        <tr>
+          <td class="muted">${formatDate(v.createdAt)}</td>
+          <td>${escapeHtml(v.vendedor)}</td>
+          <td>${escapeHtml(v.comprador)}</td>
+          <td>${escapeHtml(v.sabor)}</td>
+          <td>
+            ${v.telefone ? `
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <span>${escapeHtml(v.telefone)}</span>
+                <a
+                  href="${waLink(v.telefone, v)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style="text-decoration:none;"
+                >
+                  <button type="button" class="btnSecondary" style="width:auto; padding:8px 10px;">
+                    WhatsApp
+                  </button>
+                </a>
+              </div>
+            ` : "-"}
+          </td>
+          <td>${pillRetirada(v.retirou)}</td>
+          <td>
+            <div class="actions">
+              <button class="btnSecondary" onclick="toggleRetirada('${v.id}')">
+                ${v.retirou === "sim" ? "Desmarcar" : "Marcar retirou"}
+              </button>
+              <button class="btnSecondary" onclick="editar('${v.id}')">Editar</button>
+              <button class="btnDanger" onclick="excluir('${v.id}')">Excluir</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="muted">Nenhuma venda encontrada.</td></tr>`;
+      }
+    }
+
+    // =========================
+    // Actions
+    // =========================
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        vendedor: vendedor.value.trim(),
+        comprador: comprador.value.trim(),
+        sabor: sabor.value,
+        telefone: telefone.value.trim(),
+        retirou: retirou.value
+      };
+
+      if (!data.vendedor || !data.comprador || !data.sabor) return;
+
+      try {
+        if (editId) {
+          await updateVenda(editId, data);
+        } else {
+          await createVenda(data);
+        }
+
+        resetForm();
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Atualizado.");
+      } catch (err) {
+        alert(err?.message || err);
+        setStatus("");
+      }
+    });
+
+    btnCancelarEdicao.addEventListener("click", () => resetForm());
+
+    pesquisa.addEventListener("input", render);
+    filtroRetirada.addEventListener("change", render);
+
+    // Expor funções pro onclick
+    window.excluir = async (id) => {
+      if (!confirm("Excluir essa venda?")) return;
+      try {
+        await deleteVenda(id);
+        if (editId === id) resetForm();
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Excluído.");
+      } catch (err) {
+        alert(err?.message || err);
+        setStatus("");
+      }
+    };
+
+    window.editar = (id) => {
+      const v = vendas.find(v => v.id === id);
+      if (!v) return;
+      editId = id;
+
+      vendedor.value = v.vendedor;
+      comprador.value = v.comprador;
+      sabor.value = v.sabor;
+      telefone.value = v.telefone || "";
+      retirou.value = v.retirou;
+
+      btnCancelarEdicao.style.display = "inline-block";
+      btnSalvar.textContent = "Salvar edição";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    window.toggleRetirada = async (id) => {
+      const v = vendas.find(v => v.id === id);
+      if (!v) return;
+
+      const novo = { ...v, retirou: v.retirou === "sim" ? "nao" : "sim" };
+      // remove campos extras, manda só payload esperado
+      const payload = {
+        vendedor: novo.vendedor,
+        comprador: novo.comprador,
+        sabor: novo.sabor,
+        telefone: novo.telefone || "",
+        retirou: novo.retirou
+      };
+
+      try {
+        await updateVenda(id, payload);
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Atualizado.");
+      } catch (err) {
+        alert(err?.message || err);
+        setStatus("");
+      }
+    };
+
+    // =========================
+    // Export / Import (agora do servidor)
+    // =========================
+    btnExport.addEventListener("click", async () => {
+      try {
+        const data = await loadFromServer();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `vendas_pizza_motoclube_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        setStatus("✅ Exportado.");
+      } catch (err) {
+        alert(err?.message || err);
+      }
+    });
+
+    btnImport.addEventListener("click", () => {
+      fileInput.value = "";
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        const imported = JSON.parse(text);
+
+        if (!Array.isArray(imported)) throw new Error("JSON inválido (não é array).");
+
+        const ok = imported.every(v =>
+          v && typeof v === "object" &&
+          "vendedor" in v && "comprador" in v && "sabor" in v && "retirou" in v
+        );
+        if (!ok) throw new Error("JSON não parece ser do sistema.");
+
+        if (!confirm("Importar vai ADICIONAR no servidor (não substitui). Continuar?")) return;
+
+        // Importa um por um (simples e seguro)
+        for (const v of imported) {
+          const payload = {
+            vendedor: (v.vendedor || "").trim(),
+            comprador: (v.comprador || "").trim(),
+            sabor: v.sabor || "",
+            telefone: (v.telefone || "").trim(),
+            retirou: v.retirou === "sim" ? "sim" : "nao"
+          };
+          if (!payload.vendedor || !payload.comprador || !payload.sabor) continue;
+          await createVenda(payload);
+        }
+
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Importado.");
+        alert("Importado com sucesso!");
+      } catch (err) {
+        alert("Falha ao importar: " + (err?.message || err));
+        setStatus("");
+      }
+    });
+
+    btnLimparTudo.addEventListener("click", async () => {
+      // Para “limpar tudo” sem criar endpoint especial, vamos deletar todos os docs listados.
+      // (Funciona bem para volume pequeno de vendas)
+      if (!confirm("Isso apaga TUDO do servidor (para todos). Tem certeza?")) return;
+
+      try {
+        const data = await loadFromServer();
+        if (data.length === 0) {
+          alert("Não há vendas para apagar.");
+          return;
+        }
+
+        setStatus("Apagando tudo no servidor...");
+        for (const v of data) {
+          await deleteVenda(v.id);
+        }
+
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Tudo apagado.");
+      } catch (err) {
+        alert(err?.message || err);
+        setStatus("");
+      }
+    });
+
+    btnTrocarPin.addEventListener("click", () => {
+      clearPin();
+      alert("PIN removido deste navegador. Ao usar qualquer ação, ele vai pedir novamente.");
+    });
+
+    // =========================
+    // Init
+    // =========================
+    (async function init() {
+      try {
+        vendas = await loadFromServer();
+        render();
+        setStatus("✅ Conectado.");
+      } catch (err) {
+        setStatus("⚠️ Não foi possível conectar. Verifique a API na Vercel e o PIN.");
+      }
+    })();
+  </script>
+</body>
+</html>
